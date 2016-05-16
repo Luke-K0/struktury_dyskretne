@@ -183,13 +183,9 @@ namespace struktury_dyskretne
                 {
                     crossListWriter.Write("\n");
                 }
-                if ((crossList.Count == 0) && (frequenciesNumber == 0))
+                if ((crossList.Count < 2) && (frequenciesNumber == 0))
                 {
-                    frequenciesNumber = 1;
-                }
-                else if ((crossList.Count == 1) && (frequenciesNumber == 0))
-                {
-                    frequenciesNumber = 2;
+                    frequenciesNumber = crossList.Count + 1;
                 }
                 else if (crossList.Count > 1)
                 {
