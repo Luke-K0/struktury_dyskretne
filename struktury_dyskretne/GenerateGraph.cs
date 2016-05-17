@@ -27,14 +27,9 @@ namespace struktury_dyskretne
         double[,] distancesPower;
         double transmiterDiameterPower;
         List<int> crossListX = new List<int>();
-        string coordinatesString = "";
-        string intersectionsString = "";
-        string distancesString = "";
-        string crossListString = "";
         
         public GenerateGraph(int citRad, int tranNum, int tranRad)
         {
-            InitializeComponent();
             cityRadius = citRad;
             transmitersNumber = tranNum;
             transmiterRadius = tranRad;
@@ -44,6 +39,7 @@ namespace struktury_dyskretne
             intersections = new int[transmitersNumber, transmitersNumber];
             distancesPower = new double[transmitersNumber, transmitersNumber];
             transmiterDiameterPower = Math.Pow(transmiterDiameter, 2);
+            InitializeComponent();
         }
 
         private Point CalculatePoint()
@@ -60,8 +56,10 @@ namespace struktury_dyskretne
             double distancePower;
             if (pointB < list.Count)
             {
+                //distancePower = (Math.Pow(transmiters[0, list[pointA]] - transmiters[0, list[pointB]], 2) + Math.Pow(transmiters[1, list[pointA]] - transmiters[1, list[pointB]], 2));
+
                 distancePower = (Math.Pow(transmiters[0, list[pointA]] - transmiters[0, list[pointB]], 2) + Math.Pow(transmiters[1, list[pointA]] - transmiters[1, list[pointB]], 2));
-                if (distancePower < transmiterDiameterPower)
+                if (distancePower <= transmiterDiameterPower)
                 {
                     value = value + 1;
                 }
@@ -77,16 +75,43 @@ namespace struktury_dyskretne
             }  
         }
 
+        void countFreqNum()
+        {
+            for (int i = 0; i < transmitersNumber; i++)
+            {
+                List<int> crossList = new List<int>();
+
+                for (int j = 0; j < transmitersNumber; j++)
+                {
+                    if (intersections[i, j] == 1)
+                    {
+                        crossList.Add(j);
+                    }
+                }
+                if ((crossList.Count < 2) && (frequenciesNumber == 0))
+                {
+                    frequenciesNumber = crossList.Count + 1;
+                }
+                else if (crossList.Count > 1)
+                {
+                    for (int z = 0; z < crossList.Count; z++)
+                    {
+                        int countedFreqs = 0;
+                        countedFreqs = checkDistance(crossList, 2, z, z + 1);
+
+                        if (countedFreqs > frequenciesNumber)
+                        {
+                            frequenciesNumber = countedFreqs;
+                        }
+                    }
+                }
+            }
+            label1.Text = frequenciesNumber.ToString();
+
+        }
+
         private void GenerateGraph_Paint(object sender, PaintEventArgs e)
         {
-
-            System.IO.File.Delete("coordinatesFile.txt");
-            System.IO.File.Delete("intersectionsFile.txt");
-            System.IO.File.Delete("distancesFile.txt");
-            System.IO.File.Delete("crossListFile.txt");
-            System.IO.File.Delete("countFreqFile.txt");
-
-
             Point CenterPoint = new Point()
             {
                 X = this.ClientRectangle.Width / 2,
@@ -113,23 +138,14 @@ namespace struktury_dyskretne
                 e.Graphics.DrawEllipse(Pens.Red, tempPoint.X - transmiterRadius, tempPoint.Y - transmiterRadius, transmiterDiameter, transmiterDiameter);
                 transmiters[0, i] = tempPoint.X;
                 transmiters[1, i] = tempPoint.Y;
-                coordinatesString = "X: " + transmiters[0, i] + "\t Y: " + transmiters[1, i];
-                using (System.IO.StreamWriter coordinatesWriter = new System.IO.StreamWriter("coordinatesFile.txt", true))
-                {
-                    coordinatesWriter.WriteLine(coordinatesString);
-                }
-                coordinatesString = "";
             }
             for (int i = 0; i < transmitersNumber; i++)
             {
                 for (int j = 0; j < transmitersNumber; j++)
                 {
-                    distancesPower[i, j] = (Math.Pow(transmiters[0, i] - transmiters[0, j], 2) + Math.Pow(transmiters[1, i] - transmiters[1, j], 2));
-                    distancesString += distancesPower[i, j].ToString() + " ";
                     if (i == j)
                     {
                         intersections[i, j] = 0;
-                        intersectionsString += intersections[i, j].ToString();
                     }
                     else
                     {
@@ -138,70 +154,24 @@ namespace struktury_dyskretne
                         {
                             e.Graphics.DrawLine(Pens.Red, transmiters[0, i], transmiters[1, i], transmiters[0, j], transmiters[1, j]);
                             intersections[i, j] = 1;
-                            intersectionsString += intersections[i, j].ToString();
                         }
                         else
                         {
                             intersections[i, j] = 0;
-                            intersectionsString += intersections[i, j].ToString();
                         }
                     }
                 }
-                using (System.IO.StreamWriter intersectionsWriter = new System.IO.StreamWriter("intersectionsFile.txt", true))
-                {
-                    intersectionsWriter.WriteLine(intersectionsString);
-                }
-                intersectionsString = "";
-                using (System.IO.StreamWriter distancesWriter = new System.IO.StreamWriter("distancesFile.txt", true))
-                {
-                    distancesWriter.WriteLine(distancesString);
-                }
-                distancesString = "";
             }
-            for (int i = 0; i < transmitersNumber; i++)
-            {
-                List<int> crossList = new List<int>();
 
-                using (System.IO.StreamWriter crossListWriter = new System.IO.StreamWriter("crossListFile.txt", true))
-                {
-                    crossListWriter.Write(Convert.ToString(i) + ": \t");
-                }
-                for (int j = 0; j < transmitersNumber; j++)
-                {
-                    if (intersections[i, j] == 1)
-                    {
-                        crossList.Add(j);
-                        crossListString = j + " ";
-                        using (System.IO.StreamWriter crossListWriter = new System.IO.StreamWriter("crossListFile.txt", true))
-                        {
-                            crossListWriter.Write(crossListString);
-                        }
-                        crossListString = "";
-                    }
-                }
-                using (System.IO.StreamWriter crossListWriter = new System.IO.StreamWriter("crossListFile.txt", true))
-                {
-                    crossListWriter.Write("\n");
-                }
-                if ((crossList.Count < 2) && (frequenciesNumber == 0))
-                {
-                    frequenciesNumber = crossList.Count + 1;
-                }
-                else if (crossList.Count > 1)
-                {
-                    for (int z = 0; z < crossList.Count; z++)
-                    {
-                        int countedFreqs = 0;
-                        countedFreqs = checkDistance(crossList, 2, z, z+1);
 
-                        if (countedFreqs > frequenciesNumber)
-                        {
-                            frequenciesNumber = countedFreqs;
-                        }
-                    }       
-                }
-            }
-            label1.Text = frequenciesNumber.ToString();
+
+
+
+
+
+            countFreqNum();
+
         }
+
     }
 }
