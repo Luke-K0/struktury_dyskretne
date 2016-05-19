@@ -1,12 +1,13 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.ComponentModel;
-using System.Data;
+//using System.Collections.Generic;
+//using System.ComponentModel;
+//using System.Data;
 using System.Drawing;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+//using System.Linq;
+//using System.Text;
+//using System.Threading.Tasks;
 using System.Windows.Forms;
+
 
 namespace struktury_dyskretne
 {
@@ -17,17 +18,13 @@ namespace struktury_dyskretne
         int transmitersNumber;
         int transmiterRadius;
         int transmiterDiameter;
+        Random _random = new Random();
 
 
         Point OriginPoint;
         String FreqNum;
         int[,] Transmiters;
         int[,] Intersections;
-
-        double[,] distancesPower;
-
-        List<int> crossListX = new List<int>();
-
 
         //public GenerateGraph(int citRad, int tranNum, int tranRad)
         public GenerateGraph(Point _originPoint, int[,] _transmiters, int[,] _intersections, string _freqNum, int citRad, int tranNum, int tranRad)
@@ -76,7 +73,10 @@ namespace struktury_dyskretne
                         //double distancePower = (Math.Pow(transmiters[0, i] - transmiters[0, j], 2) + Math.Pow(transmiters[1, i] - transmiters[1, j], 2));
                         if (Intersections[i, j] == 1)
                         {
-                            e.Graphics.DrawLine(Pens.Red, Transmiters[0, i], Transmiters[1, i], Transmiters[0, j], Transmiters[1, j]);
+                        //Pen graphPen = new Pen(Color.FromArgb(255, (j+i)*10 % 255, (j * 17) % 255), 2);
+                        Pen graphPen = new Pen(Color.FromArgb(_random.Next(0, 255), _random.Next(0, 255), _random.Next(0, 255)), 2);
+
+                        e.Graphics.DrawLine(graphPen, Transmiters[0, i], Transmiters[1, i], Transmiters[0, j], Transmiters[1, j]);
                             //intersections[i, j] = 1;
                         }
                         //else

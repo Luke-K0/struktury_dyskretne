@@ -13,6 +13,7 @@ namespace struktury_dyskretne
     {
         Random _random = new Random();
         Point tempPoint;
+        List<int> checkList = new List<int>();
         String freqNum;
         int _originX;
         int _originY;
@@ -148,11 +149,26 @@ namespace struktury_dyskretne
                 if (distancePower <= transmiterDiameterPower)
                 {
                     value = value + 1;
+                    checkList.Add(list[pointB]);
                 }
+                //if (distancePower > transmiterDiameterPower && value > 3)
+                //{
+                //    value = value - 1;
+                //}
+            }
+            if (checkList.Count > 1)
+            {
+                distancePower = (Math.Pow(transmiters[0, checkList[0]] - transmiters[0, checkList[1]], 2) + Math.Pow(transmiters[1, checkList[0]] - transmiters[1, checkList[1]], 2));
+                if (distancePower > transmiterDiameterPower)
+                {
+                    value = value - 1;
+                }
+                checkList.Clear();
             }
 
             if (pointB > list.Count())
             {
+                //checkList.Clear();
                 return value;
             }
             else
