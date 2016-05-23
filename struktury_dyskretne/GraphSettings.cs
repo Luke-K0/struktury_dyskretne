@@ -49,18 +49,98 @@ namespace struktury_dyskretne
                 {
                     if ((myStream = openFileDialog1.OpenFile()) != null)
                     {
+                        List<int> idList = new List<int>();
+                        List<int> xList = new List<int>();
+                        List<int> yList = new List<int>();
+                        List<string> setList = new List<string>();
+
                         using (myStream)
                         {
                             XDocument loadGraph = XDocument.Load(myStream);
 
+                            //parse vars
+                            foreach (var node in loadGraph.Descendants("graph").Nodes())
+                            {
+                                if (node is XComment)
+                                {
+                                    setList.Add(Convert.ToString(node));
+                                }
+                            }
 
+                            setList[0] = setList[0].Trim(new Char[] { ' ', '"', '<', '>', '!', '-', '=', 'r', 'a', 'd', 'i', 'u', 's', 'n', 'g', 'e' });
+                            setList[1] = setList[1].Trim(new Char[] { ' ', '"', '<', '>', '!', '-', '=', 'r', 'a', 'd', 'i', 'u', 's', 'n', 'g', 'e' });
+
+                            cityRadius = Convert.ToInt32(setList[0]);
+                            transmiterRange = Convert.ToInt32(setList[1]);
+
+                            //parse X coordinates 
+                            loadGraph.Descendants("attr").Where(p => p.Attribute("name").Value.Contains
+                                ("X")).Select(p => new
+                            {
+                                X = p.Element("int").Value
+                            }).ToList().ForEach(p =>
+                            {
+                                xList.Add(Convert.ToInt32(p.X));
+                            });
+
+                            //parse Y coordinates 
+                            loadGraph.Descendants("attr").Where(p => p.Attribute("name").Value.Contains
+                                ("Y")).Select(p => new
+                            {
+                                Y = p.Element("int").Value
+                            }).ToList().ForEach(p =>
+                            {
+                                yList.Add(Convert.ToInt32(p.Y));
+                            });
+
+                            transmitersNumber = xList.Count;
+                            graphWindowSize = 2 * cityRadius + 100;                
+                            transmiters = new int[2, transmitersNumber];
+                            intersections = new int[transmitersNumber, transmitersNumber];
+
+                            //parse edges
+                            loadGraph.Descendants("edge").Select(p => new
+                            {
+                                to = p.Attribute("to").Value,
+                                from = p.Attribute("from").Value
+                            }).ToList().ForEach(p =>
+                            {
+                                intersections[Convert.ToInt32(p.to), Convert.ToInt32(p.from)] = 1;
+                                intersections[Convert.ToInt32(p.from), Convert.ToInt32(p.to)] = 1;
+                            });
+
+                            for (int i = 0; i < transmitersNumber; i++)
+                            {
+                                transmiters[0, i] = xList[i];
+                                transmiters[1, i] = yList[i];
+                            }
+
+                            Point CenterPoint = new Point()
+                            {
+                                X = graphWindowSize / 2,
+                                Y = graphWindowSize / 2
+                            };
+                            Point OriginPoint = new Point()
+                            {
+                                X = CenterPoint.X - cityRadius,
+                                Y = CenterPoint.Y - cityRadius
+                            };
 
                             //this.Hide();
-                            //GenerateGraph picture = new GenerateGraph(OriginPoint, transmiters, intersections, freqNum, cityRadius, transmitersNumber, transmiterRange);
-                            //picture.Width = graphWindowSize;
-                            //picture.Height = graphWindowSize;
-                            //picture.Show();
+                            GenerateGraph picture = new GenerateGraph(OriginPoint, transmiters, intersections, freqNum, cityRadius, transmitersNumber, transmiterRange);
+                            picture.Width = graphWindowSize + 20;
+                            picture.Height = graphWindowSize + 40;
+                            picture.Show();
                         }
+
+                        for (int i = 0; i < yList.Count; i++)
+                        {
+                            using (System.IO.StreamWriter coordinatesWriter = new System.IO.StreamWriter("coordinatesFile.txt", true))
+                            {
+                                coordinatesWriter.WriteLine(Convert.ToString(yList[i]));
+                            }
+                        }
+
                     }
                 }
                 catch (Exception ex)
@@ -98,8 +178,6 @@ namespace struktury_dyskretne
             _originX = CenterPoint.X;
             _originY = CenterPoint.Y;
 
-
-
             for (int i = 0; i < transmitersNumber; i++)
             {
                 tempPoint = CalculatePoint();
@@ -131,10 +209,6 @@ namespace struktury_dyskretne
             }
             countFreqNum();
 
-
-
-
-
             XDocument saveGraph = new XDocument();
 
             XElement gxl = new XElement("gxl", new XAttribute(XNamespace.Xmlns + "xlink", "http://www.w3.org/1999/xlink"));
@@ -146,6 +220,12 @@ namespace struktury_dyskretne
                         new XAttribute("edgemode", "undirected"),
                         new XAttribute("hypergraph", "false"));
             gxl.Add(graph);
+
+            // insert range attributes to graph as comments
+            XComment radius = new XComment("radius = " + cityRadius);
+            graph.Add(radius);
+            XComment range = new XComment("range = " + transmiterRange);
+            graph.Add(range);
 
             for (int i = 0; i < transmitersNumber; i++)
             {
@@ -179,10 +259,10 @@ namespace struktury_dyskretne
 
             saveGraph.Save("graph.gxl");
 
-            this.Hide();
+            //this.Hide();
             GenerateGraph picture = new GenerateGraph(OriginPoint, transmiters, intersections, freqNum, cityRadius, transmitersNumber, transmiterRange);
-            picture.Width = graphWindowSize;
-            picture.Height = graphWindowSize;
+            picture.Width = graphWindowSize + 20;
+            picture.Height = graphWindowSize + 40;
             picture.Show();
         }
 
@@ -268,7 +348,6 @@ namespace struktury_dyskretne
                 }
             }
             freqNum = frequenciesNumber.ToString();
-
         }
     }
 }
