@@ -6,6 +6,7 @@ using System.Drawing;
 using System.Linq;
 using System.Text;
 using System.Windows.Forms;
+using System.Xml.Linq;
 
 namespace struktury_dyskretne
 {
@@ -38,6 +39,39 @@ namespace struktury_dyskretne
 
         private void button1_Click(object sender, EventArgs e)
         {
+            //XNamespace xmlns = "xmlns";
+            XDocument saveGraph = new XDocument(
+                new XElement("gxl", new XAttribute(XNamespace.Xmlns + "xlink", "http://www.w3.org/1999/xlink"),
+                    new XElement("graph",
+                        new XAttribute("id", "undirected-instance"),
+                        new XAttribute("edgeis", "true"),
+                        new XAttribute("edgemode", "undirected"),
+                        new XAttribute("hypergraph", "false"),
+                        new XElement("node",
+                            new XAttribute("id", "p"),
+                            new XElement("attr",
+                                new XAttribute("name", "file"),
+                                new XElement("string", "main.c"))),
+                        new XElement("node",
+                            new XAttribute("id", "v"),
+                            new XElement("attr",
+                                new XAttribute("name", "line"),
+                                new XElement("int", "27"))),
+                        new XElement("edge",
+                            new XAttribute("id", "e"),
+                            new XAttribute("to", "v"),
+                            new XAttribute("from", "p"),
+                            new XAttribute("isdirected", "false")
+                            )
+
+                        )));
+
+            saveGraph.Save("graph.gxl");
+
+
+
+
+
             cityRadius = Convert.ToInt32(textBox1.Text);
             transmitersNumber = Convert.ToInt32(textBox2.Text);
             transmiterRange = Convert.ToInt32(textBox3.Text);
@@ -47,7 +81,7 @@ namespace struktury_dyskretne
             transmiters = new int[2, transmitersNumber];
             intersections = new int[transmitersNumber, transmitersNumber];
 
-            transmiterDiameterPower = Math.Pow(transmiterRange*2, 2);
+            transmiterDiameterPower = Math.Pow(transmiterRange * 2, 2);
 
             //Point CenterPoint = new Point()
             //{
