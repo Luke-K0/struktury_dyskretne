@@ -1,12 +1,10 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.ComponentModel;
-using System.Data;
 using System.Drawing;
 using System.Linq;
-using System.Text;
 using System.Windows.Forms;
 using System.Xml.Linq;
+using System.IO;
 
 namespace struktury_dyskretne
 {
@@ -37,40 +35,43 @@ namespace struktury_dyskretne
             this.Invalidate();
         }
 
+        private void button2_Click(object sender, EventArgs e)
+        {
+            Stream myStream = null;
+            OpenFileDialog openFileDialog1 = new OpenFileDialog();
+            openFileDialog1.Filter = "gxl files (*.gxl)|*.gxl";
+            openFileDialog1.FilterIndex = 2;
+            openFileDialog1.RestoreDirectory = true;
+
+            if (openFileDialog1.ShowDialog() == DialogResult.OK)
+            {
+                try
+                {
+                    if ((myStream = openFileDialog1.OpenFile()) != null)
+                    {
+                        using (myStream)
+                        {
+                            XDocument loadGraph = XDocument.Load(myStream);
+
+
+
+                            //this.Hide();
+                            //GenerateGraph picture = new GenerateGraph(OriginPoint, transmiters, intersections, freqNum, cityRadius, transmitersNumber, transmiterRange);
+                            //picture.Width = graphWindowSize;
+                            //picture.Height = graphWindowSize;
+                            //picture.Show();
+                        }
+                    }
+                }
+                catch (Exception ex)
+                {
+                    MessageBox.Show("Error: Could not read file from disk. Original error: " + ex.Message);
+                }
+            }
+        }
+
         private void button1_Click(object sender, EventArgs e)
         {
-            //XNamespace xmlns = "xmlns";
-            XDocument saveGraph = new XDocument(
-                new XElement("gxl", new XAttribute(XNamespace.Xmlns + "xlink", "http://www.w3.org/1999/xlink"),
-                    new XElement("graph",
-                        new XAttribute("id", "undirected-instance"),
-                        new XAttribute("edgeis", "true"),
-                        new XAttribute("edgemode", "undirected"),
-                        new XAttribute("hypergraph", "false"),
-                        new XElement("node",
-                            new XAttribute("id", "p"),
-                            new XElement("attr",
-                                new XAttribute("name", "file"),
-                                new XElement("string", "main.c"))),
-                        new XElement("node",
-                            new XAttribute("id", "v"),
-                            new XElement("attr",
-                                new XAttribute("name", "line"),
-                                new XElement("int", "27"))),
-                        new XElement("edge",
-                            new XAttribute("id", "e"),
-                            new XAttribute("to", "v"),
-                            new XAttribute("from", "p"),
-                            new XAttribute("isdirected", "false")
-                            )
-
-                        )));
-
-            saveGraph.Save("graph.gxl");
-
-
-
-
 
             cityRadius = Convert.ToInt32(textBox1.Text);
             transmitersNumber = Convert.ToInt32(textBox2.Text);
@@ -82,17 +83,6 @@ namespace struktury_dyskretne
             intersections = new int[transmitersNumber, transmitersNumber];
 
             transmiterDiameterPower = Math.Pow(transmiterRange * 2, 2);
-
-            //Point CenterPoint = new Point()
-            //{
-            //    X = this.ClientRectangle.Width / 2,
-            //    Y = this.ClientRectangle.Height / 2
-            //};
-            //Point OriginPoint = new Point()
-            //{
-            //    X = CenterPoint.X - cityRadius,
-            //    Y = CenterPoint.Y - cityRadius
-            //};
 
             Point CenterPoint = new Point()
             {
@@ -113,10 +103,6 @@ namespace struktury_dyskretne
             for (int i = 0; i < transmitersNumber; i++)
             {
                 tempPoint = CalculatePoint();
-                //e.Graphics.FillRectangle(aBrush, tempPoint.X, tempPoint.Y, 1, 1);
-                //string transmiterId = Convert.ToString(i);
-                //e.Graphics.DrawString(transmiterId, new Font("Calibri", 12), new SolidBrush(Color.Black), tempPoint.X, tempPoint.Y);
-                //e.Graphics.DrawEllipse(Pens.Red, tempPoint.X - transmiterRadius, tempPoint.Y - transmiterRadius, transmiterDiameter, transmiterDiameter);
                 transmiters[0, i] = tempPoint.X;
                 transmiters[1, i] = tempPoint.Y;
             }
@@ -143,18 +129,57 @@ namespace struktury_dyskretne
                     }
                 }
             }
-
-
-
-
-
-
-
-
-
             countFreqNum();
+
+
+
+
+
+            XDocument saveGraph = new XDocument();
+
+            XElement gxl = new XElement("gxl", new XAttribute(XNamespace.Xmlns + "xlink", "http://www.w3.org/1999/xlink"));
+            saveGraph.Add(gxl);
+
+            XElement graph = new XElement("graph",
+                        new XAttribute("id", "undirected-instance"),
+                        new XAttribute("edgeis", "true"),
+                        new XAttribute("edgemode", "undirected"),
+                        new XAttribute("hypergraph", "false"));
+            gxl.Add(graph);
+
+            for (int i = 0; i < transmitersNumber; i++)
+            {
+                XElement node = new XElement("node",
+                new XAttribute("id", i),
+                new XElement("attr",
+                    new XAttribute("name", "X"),
+                    new XElement("int", transmiters[0, i])),
+                new XElement("attr",
+                    new XAttribute("name", "Y"),
+                    new XElement("int", transmiters[1, i])));
+                graph.Add(node);
+            }
+            
+            for (int i = 0; i < transmitersNumber; i++)
+            {
+                for (int j = i + 1; j < transmitersNumber; j++)
+                {
+                    if (intersections[i,j] == 1)
+                    {
+                        XElement edge = new XElement("edge",
+                            new XAttribute("id", i + "-" + j),
+                            new XAttribute("to", j),
+                            new XAttribute("from", i),
+                            new XAttribute("isdirected", "false")
+                            );
+                        graph.Add(edge);
+                    }
+                }
+            }
+
+            saveGraph.Save("graph.gxl");
+
             this.Hide();
-            //GenerateGraph picture = new GenerateGraph(cityRadius, transmitersNumber, transmiterRange);
             GenerateGraph picture = new GenerateGraph(OriginPoint, transmiters, intersections, freqNum, cityRadius, transmitersNumber, transmiterRange);
             picture.Width = graphWindowSize;
             picture.Height = graphWindowSize;
