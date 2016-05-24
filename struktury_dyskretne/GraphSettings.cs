@@ -145,7 +145,7 @@ namespace struktury_dyskretne
                 }
                 catch (Exception ex)
                 {
-                    MessageBox.Show("Error: Could not read file from disk. Original error: " + ex.Message);
+                    MessageBox.Show(ex.Message);
                 }
             }
         }
@@ -282,18 +282,12 @@ namespace struktury_dyskretne
             double distancePower;
             if (pointB < list.Count)
             {
-                //distancePower = (Math.Pow(transmiters[0, list[pointA]] - transmiters[0, list[pointB]], 2) + Math.Pow(transmiters[1, list[pointA]] - transmiters[1, list[pointB]], 2));
-
                 distancePower = (Math.Pow(transmiters[0, list[pointA]] - transmiters[0, list[pointB]], 2) + Math.Pow(transmiters[1, list[pointA]] - transmiters[1, list[pointB]], 2));
                 if (distancePower <= transmiterDiameterPower)
                 {
                     value = value + 1;
                     checkList.Add(list[pointB]);
                 }
-                //if (distancePower > transmiterDiameterPower && value > 3)
-                //{
-                //    value = value - 1;
-                //}
             }
             if (checkList.Count > 1)
             {
