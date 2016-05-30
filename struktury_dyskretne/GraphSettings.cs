@@ -13,16 +13,15 @@ namespace struktury_dyskretne
         Random _random = new Random();
         Point tempPoint;
         List<int> checkList = new List<int>();
-        String freqNum;
+        String centerNode;
         int _originX;
         int _originY;
-        int cityRadius;
-        int transmitersNumber;
-        int transmiterRange;
-        int frequenciesNumber = 0;
+        int graphSize = 300;
+        int nodesNumber;
+        int nodeSize = 5;
         int graphWindowSize;
-        int[,] transmiters;
-        int[,] intersections;
+        int[,] nodes;
+        double[,] intersections;
         double transmiterDiameterPower;
 
         public GraphSettings()
@@ -70,8 +69,8 @@ namespace struktury_dyskretne
                             setList[0] = setList[0].Trim(new Char[] { ' ', '"', '<', '>', '!', '-', '=', 'r', 'a', 'd', 'i', 'u', 's', 'n', 'g', 'e' });
                             setList[1] = setList[1].Trim(new Char[] { ' ', '"', '<', '>', '!', '-', '=', 'r', 'a', 'd', 'i', 'u', 's', 'n', 'g', 'e' });
 
-                            cityRadius = Convert.ToInt32(setList[0]);
-                            transmiterRange = Convert.ToInt32(setList[1]);
+                            graphSize = Convert.ToInt32(setList[0]);
+                            nodeSize = Convert.ToInt32(setList[1]);
 
                             //parse X coordinates 
                             loadGraph.Descendants("attr").Where(p => p.Attribute("name").Value.Contains
@@ -93,10 +92,10 @@ namespace struktury_dyskretne
                                 yList.Add(Convert.ToInt32(p.Y));
                             });
 
-                            transmitersNumber = xList.Count;
-                            graphWindowSize = 2 * cityRadius + 100;                
-                            transmiters = new int[2, transmitersNumber];
-                            intersections = new int[transmitersNumber, transmitersNumber];
+                            nodesNumber = xList.Count;
+                            graphWindowSize = 2 * graphSize + 100;                
+                            nodes = new int[2, nodesNumber];
+                            intersections = new double[nodesNumber, nodesNumber];
 
                             //parse edges
                             loadGraph.Descendants("edge").Select(p => new
@@ -109,10 +108,10 @@ namespace struktury_dyskretne
                                 intersections[Convert.ToInt32(p.from), Convert.ToInt32(p.to)] = 1;
                             });
 
-                            for (int i = 0; i < transmitersNumber; i++)
+                            for (int i = 0; i < nodesNumber; i++)
                             {
-                                transmiters[0, i] = xList[i];
-                                transmiters[1, i] = yList[i];
+                                nodes[0, i] = xList[i];
+                                nodes[1, i] = yList[i];
                             }
 
                             Point CenterPoint = new Point()
@@ -122,12 +121,12 @@ namespace struktury_dyskretne
                             };
                             Point OriginPoint = new Point()
                             {
-                                X = CenterPoint.X - cityRadius,
-                                Y = CenterPoint.Y - cityRadius
+                                X = CenterPoint.X - graphSize,
+                                Y = CenterPoint.Y - graphSize
                             };
 
                             //this.Hide();
-                            GenerateGraph picture = new GenerateGraph(OriginPoint, transmiters, intersections, freqNum, cityRadius, transmitersNumber, transmiterRange);
+                            GenerateGraph picture = new GenerateGraph(OriginPoint, nodes, intersections, centerNode, graphSize, nodesNumber, nodeSize);
                             picture.Width = graphWindowSize + 20;
                             picture.Height = graphWindowSize + 40;
                             picture.Show();
@@ -152,17 +151,12 @@ namespace struktury_dyskretne
 
         private void button1_Click(object sender, EventArgs e)
         {
+            nodesNumber = Convert.ToInt32(textBox2.Text);
+            graphWindowSize = 2 * graphSize + 100;
+            nodes = new int[2, nodesNumber];
+            intersections = new double[nodesNumber, nodesNumber];
 
-            cityRadius = Convert.ToInt32(textBox1.Text);
-            transmitersNumber = Convert.ToInt32(textBox2.Text);
-            transmiterRange = Convert.ToInt32(textBox3.Text);
-
-            graphWindowSize = 2 * cityRadius + 100;
-
-            transmiters = new int[2, transmitersNumber];
-            intersections = new int[transmitersNumber, transmitersNumber];
-
-            transmiterDiameterPower = Math.Pow(transmiterRange * 2, 2);
+            transmiterDiameterPower = Math.Pow(nodeSize * 2, 2);
 
             Point CenterPoint = new Point()
             {
@@ -171,43 +165,80 @@ namespace struktury_dyskretne
             };
             Point OriginPoint = new Point()
             {
-                X = CenterPoint.X - cityRadius,
-                Y = CenterPoint.Y - cityRadius
+                X = CenterPoint.X - graphSize,
+                Y = CenterPoint.Y - graphSize
             };
 
             _originX = CenterPoint.X;
             _originY = CenterPoint.Y;
 
-            for (int i = 0; i < transmitersNumber; i++)
+            for (int i = 0; i < nodesNumber; i++)
             {
                 tempPoint = CalculatePoint();
-                transmiters[0, i] = tempPoint.X;
-                transmiters[1, i] = tempPoint.Y;
+                nodes[0, i] = tempPoint.X;
+                nodes[1, i] = tempPoint.Y;
             }
 
-            for (int i = 0; i < transmitersNumber; i++)
+            for (int i = 0; i < nodesNumber; i++)
             {
-                for (int j = 0; j < transmitersNumber; j++)
+                for (int j = i; j < nodesNumber; j++)
                 {
                     if (i == j)
                     {
                         intersections[i, j] = 0;
                     }
                     else
-                    {
-                        double distancePower = (Math.Pow(transmiters[0, i] - transmiters[0, j], 2) + Math.Pow(transmiters[1, i] - transmiters[1, j], 2));
-                        if (distancePower < transmiterDiameterPower)
+                    { 
+                        if (_random.Next(0, 100) % 2 == 0)
                         {
                             intersections[i, j] = 1;
+                            intersections[j, i] = 1;
                         }
                         else
                         {
                             intersections[i, j] = 0;
+                            intersections[j, i] = 0;
                         }
                     }
                 }
             }
-            countFreqNum();
+
+
+            dijstra dist = new dijstra(intersections, nodesNumber);
+
+            var item = dist.dist;
+            List<string> tempList = new List<string>();
+
+            for (int i = 0; i < item.Length; i++)
+            {
+                tempList.Add("Node " + i + " Path Distance = " + item[i]);
+            }
+
+            System.IO.File.Delete("listFile.txt");
+            System.IO.File.Delete("intersectionsFile.txt");
+            string intersectionsString = "";
+
+            for (int i = 0; i < nodesNumber; i++)
+            {
+                for (int j = 0; j < nodesNumber; j++)
+                {
+                    intersectionsString += intersections[i, j].ToString();
+                }
+                using (System.IO.StreamWriter intersectionsWriter = new System.IO.StreamWriter("intersectionsFile.txt", true))
+                {
+                    intersectionsWriter.WriteLine(intersectionsString);
+                }
+                intersectionsString = "";
+            }
+
+
+            for (int i = 0; i < tempList.Count; i++)
+            {
+                using (System.IO.StreamWriter coordinatesWriter = new System.IO.StreamWriter("listFile.txt", true))
+                {
+                    coordinatesWriter.WriteLine(tempList[i]);
+                }
+            }
 
             XDocument saveGraph = new XDocument();
 
@@ -222,27 +253,27 @@ namespace struktury_dyskretne
             gxl.Add(graph);
 
             // insert range attributes to graph as comments
-            XComment radius = new XComment("radius = " + cityRadius);
+            XComment radius = new XComment("radius = " + graphSize);
             graph.Add(radius);
-            XComment range = new XComment("range = " + transmiterRange);
+            XComment range = new XComment("range = " + nodeSize);
             graph.Add(range);
 
-            for (int i = 0; i < transmitersNumber; i++)
+            for (int i = 0; i < nodesNumber; i++)
             {
                 XElement node = new XElement("node",
                 new XAttribute("id", i),
                 new XElement("attr",
                     new XAttribute("name", "X"),
-                    new XElement("int", transmiters[0, i])),
+                    new XElement("int", nodes[0, i])),
                 new XElement("attr",
                     new XAttribute("name", "Y"),
-                    new XElement("int", transmiters[1, i])));
+                    new XElement("int", nodes[1, i])));
                 graph.Add(node);
             }
             
-            for (int i = 0; i < transmitersNumber; i++)
+            for (int i = 0; i < nodesNumber; i++)
             {
-                for (int j = i + 1; j < transmitersNumber; j++)
+                for (int j = i + 1; j < nodesNumber; j++)
                 {
                     if (intersections[i,j] == 1)
                     {
@@ -260,7 +291,7 @@ namespace struktury_dyskretne
             saveGraph.Save("graph.gxl");
 
             //this.Hide();
-            GenerateGraph picture = new GenerateGraph(OriginPoint, transmiters, intersections, freqNum, cityRadius, transmitersNumber, transmiterRange);
+            GenerateGraph picture = new GenerateGraph(OriginPoint, nodes, intersections, centerNode, graphSize, nodesNumber, nodeSize);
             picture.Width = graphWindowSize + 20;
             picture.Height = graphWindowSize + 40;
             picture.Show();
@@ -269,79 +300,83 @@ namespace struktury_dyskretne
         private Point CalculatePoint()
         {
             var angle = _random.NextDouble() * Math.PI * 2;
-            var radius = Math.Sqrt(_random.NextDouble()) * cityRadius;
+            var radius = Math.Sqrt(_random.NextDouble()) * graphSize;
             var x = _originX + radius * Math.Cos(angle);
             var y = _originY + radius * Math.Sin(angle);
             return new Point((int)x, (int)y);
         }
 
-
-
-        int checkDistance(List<int> list, int value, int pointA, int pointB)
+        double shiftRows(double[,] array)
         {
-            double distancePower;
-            if (pointB < list.Count)
+            for (int i = 0; i < nodesNumber; i++)
             {
-                distancePower = (Math.Pow(transmiters[0, list[pointA]] - transmiters[0, list[pointB]], 2) + Math.Pow(transmiters[1, list[pointA]] - transmiters[1, list[pointB]], 2));
-                if (distancePower <= transmiterDiameterPower)
+                double tempVal;
+                for (int j = 0; j < nodesNumber; j++)
                 {
-                    value = value + 1;
-                    checkList.Add(list[pointB]);
+                    //do logic
                 }
-            }
-            if (checkList.Count > 1)
-            {
-                distancePower = (Math.Pow(transmiters[0, checkList[0]] - transmiters[0, checkList[1]], 2) + Math.Pow(transmiters[1, checkList[0]] - transmiters[1, checkList[1]], 2));
-                if (distancePower > transmiterDiameterPower)
-                {
-                    value = value - 1;
-                }
-                checkList.Clear();
-            }
 
-            if (pointB > list.Count())
-            {
-                //checkList.Clear();
-                return value;
             }
-            else
-            {
-                return checkDistance(list, value, pointA, pointB + 1);
-            }
+            return 0;
         }
+    }
 
-        void countFreqNum()
+    public class dijstra
+    {
+        public dijstra(double[,] graphArray, int nodeNum)
         {
-            for (int i = 0; i < transmitersNumber; i++)
+            initial(0, nodeNum);
+            while (queue.Count > 0)
             {
-                List<int> crossList = new List<int>();
+                int u = getNextVertex();
 
-                for (int j = 0; j < transmitersNumber; j++)
+                for (int i = 0; i < nodeNum; i++)
                 {
-                    if (intersections[i, j] == 1)
+                    if (graphArray[u, i] > 0)
                     {
-                        crossList.Add(j);
-                    }
-                }
-                if ((crossList.Count < 2) && (frequenciesNumber == 0))
-                {
-                    frequenciesNumber = crossList.Count + 1;
-                }
-                else if (crossList.Count > 1)
-                {
-                    for (int z = 0; z < crossList.Count; z++)
-                    {
-                        int countedFreqs = 0;
-                        countedFreqs = checkDistance(crossList, 2, z, z + 1);
-
-                        if (countedFreqs > frequenciesNumber)
+                        if (dist[i] > dist[u] + graphArray[u, i])
                         {
-                            frequenciesNumber = countedFreqs;
+                            dist[i] = dist[u] + graphArray[u, i];
                         }
                     }
                 }
             }
-            freqNum = frequenciesNumber.ToString();
+        }
+
+        public double[] dist { get; set; }
+
+        int getNextVertex()
+        {
+            var min = double.PositiveInfinity;
+            int vertex = -1;
+
+            foreach (int val in queue)
+            {
+                if (dist[val] <= min)
+                {
+                    min = dist[val];
+                    vertex = val;
+                }
+            }
+
+            queue.Remove(vertex);
+
+            return vertex;
+
+        }
+        List<int> queue = new List<int>();
+
+        public void initial(int s, int len)
+        {
+            dist = new double[len];
+
+            for (int i = 0; i < len; i++)
+            {
+                dist[i] = double.PositiveInfinity;
+                queue.Add(i);
+            }
+
+            dist[0] = 0;
         }
     }
 }
