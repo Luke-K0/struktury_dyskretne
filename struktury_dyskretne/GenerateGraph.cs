@@ -1,7 +1,7 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Drawing;
 using System.Windows.Forms;
-
 
 namespace struktury_dyskretne
 {
@@ -16,16 +16,16 @@ namespace struktury_dyskretne
 
 
         Point OriginPoint;
-        String FreqNum;
+        List<double> maxDist;
         int[,] Transmiters;
         double[,] Intersections;
 
-        public GenerateGraph(Point _originPoint, int[,] _transmiters, double[,] _intersections, string _freqNum, int citRad, int tranNum, int tranRad)
+        public GenerateGraph(Point _originPoint, int[,] _transmiters, double[,] _intersections, List<double> _maxDist, int citRad, int tranNum, int tranRad)
         {
             OriginPoint = _originPoint;
             Transmiters = _transmiters;
             Intersections = _intersections;
-            FreqNum = _freqNum;
+            maxDist = _maxDist;
 
             cityRadius = citRad;
             transmitersNumber = tranNum;
@@ -59,7 +59,7 @@ namespace struktury_dyskretne
                         }
                 }
             }
-            label1.Text = FreqNum;
+            label1.Text = "placeholder";
         }
         protected override void OnFormClosing(FormClosingEventArgs e)
         {

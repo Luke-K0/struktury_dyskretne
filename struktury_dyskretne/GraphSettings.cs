@@ -52,6 +52,7 @@ namespace struktury_dyskretne
                         List<int> xList = new List<int>();
                         List<int> yList = new List<int>();
                         List<string> setList = new List<string>();
+                        List<double> maxDist = new List<double>();
 
                         using (myStream)
                         {
@@ -126,7 +127,7 @@ namespace struktury_dyskretne
                             };
 
                             //this.Hide();
-                            GenerateGraph picture = new GenerateGraph(OriginPoint, nodes, intersections, centerNode, graphSize, nodesNumber, nodeSize);
+                            GenerateGraph picture = new GenerateGraph(OriginPoint, nodes, intersections, maxDist, graphSize, nodesNumber, nodeSize);
                             picture.Width = graphWindowSize + 20;
                             picture.Height = graphWindowSize + 40;
                             picture.Show();
@@ -189,7 +190,7 @@ namespace struktury_dyskretne
                     }
                     else
                     { 
-                        if (_random.Next(0, 100) % 2 == 0)
+                        if (_random.Next(0, 100) % 6 == 0)
                         {
                             intersections[i, j] = 1;
                             intersections[j, i] = 1;
@@ -203,40 +204,77 @@ namespace struktury_dyskretne
                 }
             }
 
-
-            dijstra dist = new dijstra(intersections, nodesNumber);
-
-            var item = dist.dist;
-            List<string> tempList = new List<string>();
-
-            for (int i = 0; i < item.Length; i++)
-            {
-                tempList.Add("Node " + i + " Path Distance = " + item[i]);
-            }
-
             System.IO.File.Delete("listFile.txt");
+            System.IO.File.Delete("checkList.txt");
             System.IO.File.Delete("intersectionsFile.txt");
-            string intersectionsString = "";
+            List<string> tempList = new List<string>();
+            List<double> tempDist = new List<double>();
+            List<double> maxDist = new List<double>();
 
-            for (int i = 0; i < nodesNumber; i++)
+            for (int z = 0; z < nodesNumber; z++)
             {
-                for (int j = 0; j < nodesNumber; j++)
+                dijstra dist = new dijstra(intersections, nodesNumber);
+                var item = dist.dist;
+                
+                for (int i = 0; i < item.Length; i++)
                 {
-                    intersectionsString += intersections[i, j].ToString();
+                    tempList.Add("Node " + (z + i) % nodesNumber + " Path Distance = " + item[i]);
+                    tempDist.Add(item[i]);
+                }
+                double temp = 0;
+                for (int i = 0; i < tempDist.Count(); i++)
+                {
+                    if ((tempDist[i] > temp) && (tempDist[i] != double.PositiveInfinity))
+                    {
+                        temp = tempDist[i];
+                    }
+                }
+                maxDist.Add(temp);
+
+                tempDist.Clear();
+
+                string intersectionsString = "";
+
+                for (int i = 0; i < nodesNumber; i++)
+                {
+                    for (int j = 0; j < nodesNumber; j++)
+                    {
+                        intersectionsString += intersections[i, j].ToString();
+                    }
+                    using (System.IO.StreamWriter intersectionsWriter = new System.IO.StreamWriter("intersectionsFile.txt", true))
+                    {
+                        intersectionsWriter.WriteLine(intersectionsString);
+                    }
+                    intersectionsString = "";
                 }
                 using (System.IO.StreamWriter intersectionsWriter = new System.IO.StreamWriter("intersectionsFile.txt", true))
                 {
-                    intersectionsWriter.WriteLine(intersectionsString);
+                    intersectionsWriter.WriteLine();
                 }
-                intersectionsString = "";
-            }
 
+                for (int i = 0; i < tempList.Count; i++)
+                {
+                    using (System.IO.StreamWriter coordinatesWriter = new System.IO.StreamWriter("listFile.txt", true))
+                    {
+                        coordinatesWriter.WriteLine(tempList[i]);
+                    }
+                }
 
-            for (int i = 0; i < tempList.Count; i++)
-            {
                 using (System.IO.StreamWriter coordinatesWriter = new System.IO.StreamWriter("listFile.txt", true))
                 {
-                    coordinatesWriter.WriteLine(tempList[i]);
+                    coordinatesWriter.WriteLine();
+                }
+
+                tempList.Clear();
+                shiftRows(intersections);
+
+            }
+
+            for (int y = 0; y < maxDist.Count; y++)
+            {
+                using (System.IO.StreamWriter coordinatesWriter = new System.IO.StreamWriter("checkList.txt", true))
+                {
+                    coordinatesWriter.WriteLine( "node " + y + " max distance " + maxDist[y] );
                 }
             }
 
@@ -291,7 +329,7 @@ namespace struktury_dyskretne
             saveGraph.Save("graph.gxl");
 
             //this.Hide();
-            GenerateGraph picture = new GenerateGraph(OriginPoint, nodes, intersections, centerNode, graphSize, nodesNumber, nodeSize);
+            GenerateGraph picture = new GenerateGraph(OriginPoint, nodes, intersections, maxDist, graphSize, nodesNumber, nodeSize);
             picture.Width = graphWindowSize + 20;
             picture.Height = graphWindowSize + 40;
             picture.Show();
@@ -306,18 +344,17 @@ namespace struktury_dyskretne
             return new Point((int)x, (int)y);
         }
 
-        double shiftRows(double[,] array)
+        void shiftRows(double[,] array)
         {
+            double[,] tempIntersections = new double[nodesNumber, nodesNumber];
             for (int i = 0; i < nodesNumber; i++)
             {
-                double tempVal;
                 for (int j = 0; j < nodesNumber; j++)
                 {
-                    //do logic
+                    tempIntersections[i, j] = array[(i + 1) % nodesNumber, (j + 1) % nodesNumber];
                 }
-
             }
-            return 0;
+            intersections = tempIntersections;
         }
     }
 
