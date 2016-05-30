@@ -13,7 +13,6 @@ namespace struktury_dyskretne
         Random _random = new Random();
         Point tempPoint;
         List<int> checkList = new List<int>();
-        String centerNode;
         int _originX;
         int _originY;
         int graphSize = 300;

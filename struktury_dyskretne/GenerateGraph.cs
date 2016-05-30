@@ -54,12 +54,13 @@ namespace struktury_dyskretne
                 {
                         if (Intersections[i, j] == 1)
                         {
-                        Pen graphPen = new Pen(Color.FromArgb(_random.Next(0, 255), _random.Next(0, 255), _random.Next(0, 255)), 2);
+                        Pen graphPen = new Pen(Color.FromArgb(_random.Next(0, 255), _random.Next(0, 255), _random.Next(0, 255)), 4);
                         e.Graphics.DrawLine(graphPen, Transmiters[0, i], Transmiters[1, i], Transmiters[0, j], Transmiters[1, j]);
                         }
                 }
             }
-            label1.Text = "placeholder";
+            label4.Text = "list of nodes";
+            label5.Text = "length";
         }
         protected override void OnFormClosing(FormClosingEventArgs e)
         {
@@ -67,4 +68,4 @@ namespace struktury_dyskretne
         }
     }
 }
-// add colors dependancies
+// add colors dependencies
