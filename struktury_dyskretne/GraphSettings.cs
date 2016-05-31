@@ -17,7 +17,7 @@ namespace struktury_dyskretne
         int _originY;
         int graphSize = 300;
         int nodesNumber;
-        int nodeSize = 5;
+        int nodeSize = 6;
         int graphWindowSize;
         int[,] nodes;
         double[,] intersections;
@@ -189,7 +189,7 @@ namespace struktury_dyskretne
                     }
                     else
                     { 
-                        if (_random.Next(0, 100) % 6 == 0)
+                        if (_random.Next(0, 100) % _random.Next(1, 10) == 0)
                         {
                             intersections[i, j] = 1;
                             intersections[j, i] = 1;
@@ -209,7 +209,7 @@ namespace struktury_dyskretne
                 {
                     sum = sum + Convert.ToInt16(intersections[i, j]);
                 }
-                if (sum == 0)
+                if (sum < 1)
                 {
                     int randEdge = _random.Next(0, nodesNumber);
                     intersections[i, randEdge] = 1;
