@@ -7,33 +7,29 @@ namespace struktury_dyskretne
 {
     public partial class GenerateGraph : Form
     {
-        int cityRadius;
-        int cityDiameter;
         int nodesNumber;
-        int transmiterRadius;
-        int transmiterDiameter;
+        int nodeRadius;
+        int nodeDiameter;
         Random _random = new Random();
 
 
         Point OriginPoint;
         List<double> maxDist;
-        int[,] Transmiters;
+        int[,] nodes;
         double[,] Intersections;
         double distance;
         string nodesLabel;
 
-        public GenerateGraph(Point _originPoint, int[,] _transmiters, double[,] _intersections, List<double> _maxDist, int citRad, int nodeNum, int tranRad)
+        public GenerateGraph(Point _originPoint, int[,] _nodes, double[,] _intersections, List<double> _maxDist, int graphRad, int nodeNum, int nodeRad)
         {
             OriginPoint = _originPoint;
-            Transmiters = _transmiters;
+            nodes = _nodes;
             Intersections = _intersections;
             maxDist = _maxDist;
 
-            cityRadius = citRad;
             nodesNumber = nodeNum;
-            transmiterRadius = tranRad;
-            cityDiameter = 2 * cityRadius;
-            transmiterDiameter = 2 * transmiterRadius;
+            nodeRadius = nodeRad;
+            nodeDiameter = 2 * nodeRadius;
 
             distance = nodesNumber;
             nodesLabel = "";
@@ -51,7 +47,6 @@ namespace struktury_dyskretne
                     nodesLabel += Convert.ToString(i) + ", ";
                 }
             }
-
             InitializeComponent();
         }
 
@@ -67,7 +62,7 @@ namespace struktury_dyskretne
                         if (Intersections[i, j] == 1)
                         {
                         Pen graphPen = new Pen(Color.MediumAquamarine, 4);
-                        e.Graphics.DrawLine(graphPen, Transmiters[0, i], Transmiters[1, i], Transmiters[0, j], Transmiters[1, j]);
+                        e.Graphics.DrawLine(graphPen, nodes[0, i], nodes[1, i], nodes[0, j], nodes[1, j]);
                         }
                 }
             }
@@ -75,19 +70,19 @@ namespace struktury_dyskretne
             {
                 if (maxDist[i] == distance)
                 {
-                    e.Graphics.FillRectangle(aBrush, Transmiters[0, i], Transmiters[1, i], 1, 1);
-                    e.Graphics.FillEllipse(Brushes.Red, Transmiters[0, i] - transmiterRadius, Transmiters[1, i] - transmiterRadius, transmiterDiameter, transmiterDiameter);
+                    e.Graphics.FillRectangle(aBrush, nodes[0, i], nodes[1, i], 1, 1);
+                    e.Graphics.FillEllipse(Brushes.Red, nodes[0, i] - nodeRadius, nodes[1, i] - nodeRadius, nodeDiameter, nodeDiameter);
                 }
                 else
                 {
-                    e.Graphics.FillRectangle(aBrush, Transmiters[0, i], Transmiters[1, i], 1, 1);
-                    e.Graphics.FillEllipse(Brushes.Blue, Transmiters[0, i] - transmiterRadius, Transmiters[1, i] - transmiterRadius, transmiterDiameter, transmiterDiameter);
+                    e.Graphics.FillRectangle(aBrush, nodes[0, i], nodes[1, i], 1, 1);
+                    e.Graphics.FillEllipse(Brushes.Blue, nodes[0, i] - nodeRadius, nodes[1, i] - nodeRadius, nodeDiameter, nodeDiameter);
                 }
             }
             for (int i = 0; i < nodesNumber; i++)
             {
                 string transmiterId = Convert.ToString(i);
-                e.Graphics.DrawString(transmiterId, new Font("Calibri", 14, FontStyle.Bold), new SolidBrush(Color.Black), Transmiters[0, i], Transmiters[1, i]);
+                e.Graphics.DrawString(transmiterId, new Font("Calibri", 14, FontStyle.Bold), new SolidBrush(Color.Black), nodes[0, i], nodes[1, i]);
             }
 
             label4.Text = nodesLabel;

@@ -4,7 +4,6 @@ using System.Drawing;
 using System.Linq;
 using System.Windows.Forms;
 using System.Xml.Linq;
-using System.IO;
 
 namespace struktury_dyskretne
 {
@@ -12,16 +11,14 @@ namespace struktury_dyskretne
     {
         Random _random = new Random();
         Point tempPoint;
-        List<int> checkList = new List<int>();
         int _originX;
         int _originY;
         int graphSize = 300;
-        int nodesNumber;
         int nodeSize = 6;
+        int nodesNumber;
         int graphWindowSize;
         int[,] nodes;
         double[,] intersections;
-        double transmiterDiameterPower;
 
         public GraphSettings()
         {
@@ -33,130 +30,12 @@ namespace struktury_dyskretne
             this.Invalidate();
         }
 
-        private void button2_Click(object sender, EventArgs e)
-        {
-            Stream myStream = null;
-            OpenFileDialog openFileDialog1 = new OpenFileDialog();
-            openFileDialog1.Filter = "gxl files (*.gxl)|*.gxl";
-            openFileDialog1.FilterIndex = 2;
-            openFileDialog1.RestoreDirectory = true;
-
-            if (openFileDialog1.ShowDialog() == DialogResult.OK)
-            {
-                try
-                {
-                    if ((myStream = openFileDialog1.OpenFile()) != null)
-                    {
-                        List<int> idList = new List<int>();
-                        List<int> xList = new List<int>();
-                        List<int> yList = new List<int>();
-                        List<string> setList = new List<string>();
-                        List<double> maxDist = new List<double>();
-
-                        using (myStream)
-                        {
-                            XDocument loadGraph = XDocument.Load(myStream);
-
-                            //parse vars
-                            foreach (var node in loadGraph.Descendants("graph").Nodes())
-                            {
-                                if (node is XComment)
-                                {
-                                    setList.Add(Convert.ToString(node));
-                                }
-                            }
-
-                            setList[0] = setList[0].Trim(new Char[] { ' ', '"', '<', '>', '!', '-', '=', 'r', 'a', 'd', 'i', 'u', 's', 'n', 'g', 'e' });
-                            setList[1] = setList[1].Trim(new Char[] { ' ', '"', '<', '>', '!', '-', '=', 'r', 'a', 'd', 'i', 'u', 's', 'n', 'g', 'e' });
-
-                            graphSize = Convert.ToInt32(setList[0]);
-                            nodeSize = Convert.ToInt32(setList[1]);
-
-                            //parse X coordinates 
-                            loadGraph.Descendants("attr").Where(p => p.Attribute("name").Value.Contains
-                                ("X")).Select(p => new
-                            {
-                                X = p.Element("int").Value
-                            }).ToList().ForEach(p =>
-                            {
-                                xList.Add(Convert.ToInt32(p.X));
-                            });
-
-                            //parse Y coordinates 
-                            loadGraph.Descendants("attr").Where(p => p.Attribute("name").Value.Contains
-                                ("Y")).Select(p => new
-                            {
-                                Y = p.Element("int").Value
-                            }).ToList().ForEach(p =>
-                            {
-                                yList.Add(Convert.ToInt32(p.Y));
-                            });
-
-                            nodesNumber = xList.Count;
-                            graphWindowSize = 2 * graphSize + 100;                
-                            nodes = new int[2, nodesNumber];
-                            intersections = new double[nodesNumber, nodesNumber];
-
-                            //parse edges
-                            loadGraph.Descendants("edge").Select(p => new
-                            {
-                                to = p.Attribute("to").Value,
-                                from = p.Attribute("from").Value
-                            }).ToList().ForEach(p =>
-                            {
-                                intersections[Convert.ToInt32(p.to), Convert.ToInt32(p.from)] = 1;
-                                intersections[Convert.ToInt32(p.from), Convert.ToInt32(p.to)] = 1;
-                            });
-
-                            for (int i = 0; i < nodesNumber; i++)
-                            {
-                                nodes[0, i] = xList[i];
-                                nodes[1, i] = yList[i];
-                            }
-
-                            Point CenterPoint = new Point()
-                            {
-                                X = graphWindowSize / 2,
-                                Y = graphWindowSize / 2
-                            };
-                            Point OriginPoint = new Point()
-                            {
-                                X = CenterPoint.X - graphSize,
-                                Y = CenterPoint.Y - graphSize
-                            };
-
-                            //this.Hide();
-                            GenerateGraph picture = new GenerateGraph(OriginPoint, nodes, intersections, maxDist, graphSize, nodesNumber, nodeSize);
-                            picture.Width = graphWindowSize + 20;
-                            picture.Height = graphWindowSize + 40;
-                            picture.Show();
-                        }
-
-                        for (int i = 0; i < yList.Count; i++)
-                        {
-                            using (System.IO.StreamWriter coordinatesWriter = new System.IO.StreamWriter("coordinatesFile.txt", true))
-                            {
-                                coordinatesWriter.WriteLine(Convert.ToString(yList[i]));
-                            }
-                        }
-
-                    }
-                }
-                catch (Exception ex)
-                {
-                    MessageBox.Show(ex.Message);
-                }
-            }
-        }
-
         private void button1_Click(object sender, EventArgs e)
         {
             nodesNumber = Convert.ToInt32(textBox2.Text);
             graphWindowSize = 2 * graphSize + 100;
             nodes = new int[2, nodesNumber];
             intersections = new double[nodesNumber, nodesNumber];
-
-            transmiterDiameterPower = Math.Pow(nodeSize * 2, 2);
 
             Point CenterPoint = new Point()
             {
@@ -179,6 +58,7 @@ namespace struktury_dyskretne
                 nodes[1, i] = tempPoint.Y;
             }
 
+            // random graph generation
             for (int i = 0; i < nodesNumber; i++)
             {
                 for (int j = i; j < nodesNumber; j++)
@@ -220,6 +100,7 @@ namespace struktury_dyskretne
                 }
             }
 
+            // create logfiles
             System.IO.File.Delete("listFile.txt");
             System.IO.File.Delete("checkList.txt");
             System.IO.File.Delete("intersectionsFile.txt");
@@ -294,6 +175,7 @@ namespace struktury_dyskretne
                 }
             }
 
+            // gxl generation
             XDocument saveGraph = new XDocument();
 
             XElement gxl = new XElement("gxl", new XAttribute(XNamespace.Xmlns + "xlink", "http://www.w3.org/1999/xlink"));
@@ -305,12 +187,6 @@ namespace struktury_dyskretne
                         new XAttribute("edgemode", "undirected"),
                         new XAttribute("hypergraph", "false"));
             gxl.Add(graph);
-
-            // insert range attributes to graph as comments
-            XComment radius = new XComment("radius = " + graphSize);
-            graph.Add(radius);
-            XComment range = new XComment("range = " + nodeSize);
-            graph.Add(range);
 
             for (int i = 0; i < nodesNumber; i++)
             {
@@ -395,14 +271,11 @@ namespace struktury_dyskretne
                 }
             }
         }
-
         public double[] dist { get; set; }
-
         int getNextVertex()
         {
             var min = double.PositiveInfinity;
             int vertex = -1;
-
             foreach (int val in queue)
             {
                 if (dist[val] <= min)
@@ -411,24 +284,19 @@ namespace struktury_dyskretne
                     vertex = val;
                 }
             }
-
             queue.Remove(vertex);
-
             return vertex;
-
         }
         List<int> queue = new List<int>();
 
         public void initial(int s, int len)
         {
             dist = new double[len];
-
             for (int i = 0; i < len; i++)
             {
                 dist[i] = double.PositiveInfinity;
                 queue.Add(i);
             }
-
             dist[0] = 0;
         }
     }
