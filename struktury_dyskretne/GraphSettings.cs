@@ -202,6 +202,23 @@ namespace struktury_dyskretne
                     }
                 }
             }
+            for (int i = 0; i < nodesNumber; i++)
+            {
+                int sum = 0;
+                for (int j = 0; j < nodesNumber; j++)
+                {
+                    sum = sum + Convert.ToInt16(intersections[i, j]);
+                }
+                if (sum == 0)
+                {
+                    int randEdge = _random.Next(0, nodesNumber);
+                    intersections[i, randEdge] = 1;
+                    intersections[randEdge, i] = 1;
+                    randEdge = _random.Next(0, nodesNumber);
+                    intersections[i, randEdge] = 1;
+                    intersections[randEdge, i] = 1;
+                }
+            }
 
             System.IO.File.Delete("listFile.txt");
             System.IO.File.Delete("checkList.txt");
